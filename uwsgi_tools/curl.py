@@ -1,10 +1,9 @@
 import socket
 from .utils import pack_uwsgi_vars, parse_addr, get_host_from_url
+from .url_socket import create_socket, urlsplit
 
 
-def ask_uwsgi(addr_and_port, var, body=''):
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect(parse_addr(addr_and_port))
+def ask_uwsgi(s, var, body=''):
     s.send(pack_uwsgi_vars(var) + body.encode('utf8'))
     response = []
     while 1:
@@ -12,24 +11,27 @@ def ask_uwsgi(addr_and_port, var, body=''):
         if not data:
             break
         response.append(data)
-    s.close()
     return b''.join(response).decode('utf8')
 
 
-def curl(addr_and_port, url):
-    host, uri = get_host_from_url(url)
-    path, _, qs = uri.partition('?')
-    host = host or parse_addr(addr_and_port)[0]
+def curl(uwsgi_addr, method='GET', url=None):
+    parts, s = create_socket(uwsgi_addr)
+    parts2 = urlsplit(url)
+    # end if
+    uri = parts2.path + "?" + parts2.query + "#" + parts2.fragment
     var = {
         'SERVER_PROTOCOL': 'HTTP/1.1',
-        'REQUEST_METHOD': 'GET',
-        'PATH_INFO': path,
+        'REQUEST_METHOD': method,
+        'PATH_INFO': parts2.path,
         'REQUEST_URI': uri,
-        'QUERY_STRING': qs,
-        'SERVER_NAME': host,
-        'HTTP_HOST': host,
+        'QUERY_STRING': parts2.query,
+        'SERVER_NAME': parts2.host or '127.0.0.1',
+        'HTTP_HOST': parts2.host,
     }
-    return ask_uwsgi(addr_and_port, var)
+    result = ask_uwsgi(s, var)
+    s.close()
+    return result
+
 
 
 def cli(*args):
@@ -41,11 +43,14 @@ def cli(*args):
     parser.add_argument('uwsgi_addr', nargs=1,
                         help='Remote address of uWSGI server')
 
+    parser.add_argument('method', nargs='?', default='GET',
+                        help='Request method')
+
     parser.add_argument('url', nargs='?', default='/',
                         help='Request URI optionally containing hostname')
 
     args = parser.parse_args(args or sys.argv[1:])
-    print(curl(args.uwsgi_addr[0], args.url))
+    print(curl(args.uwsgi_addr[0], args.method, args.url))
 
 
 if __name__ == '__main__':
