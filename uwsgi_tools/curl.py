@@ -1,5 +1,5 @@
 import socket
-from .utils import pack_uwsgi_vars, parse_addr, get_host_from_url
+from .utils import pack_uwsgi_vars
 from .url_socket import create_socket, urlsplit
 
 
@@ -54,4 +54,5 @@ def cli(*args):
 
 
 if __name__ == '__main__':
-    cli()
+    import sys
+    cli(*sys.argv[1:])

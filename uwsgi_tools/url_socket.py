@@ -1,7 +1,7 @@
 import socket
 import sys
 if sys.version_info[0] == 3:
-    from urllib.parse import urlsplit
+    from urllib.parse import urlsplit, ParseResult
 else:  # py 2
     from urlparse import urlsplit
 # end if
@@ -26,17 +26,21 @@ class SocketInfos(object):
         self.parts = parts
         self.address = address
     # end def
+
+    def __repr__(self):
+        return "SocketInfos(params={s.params!r}, parts={s.parts!r}, address={s.address!r})".format(s=self)
+    # end def
 # end class
 
 
 def create_socket_params(url):
+    print(repr(url))
     parts = urlsplit(url)
     if parts.scheme in FILE_SOCKET_TYPES_BY_SCHEME:
         socket_type = FILE_SOCKET_TYPES_BY_SCHEME[parts.scheme]
-        connect = parts.netloc + parts.path
-        parts.path = connect
-        parts.hostname = '127.0.0.1'
-        parts.port = ''
+        remove_len = len(parts.scheme+"://")
+        connect = url[remove_len:]
+        parts = ParseResult(scheme=parts.scheme, netloc='', path=connect, params='', query='', fragment='')
         return SocketInfos(parts, [(socket.AF_UNIX, socket_type)], connect)
     elif parts.scheme in NETWORK_SOCKET_TYPES_BY_SCHEME:
         socket_type = NETWORK_SOCKET_TYPES_BY_SCHEME[parts.scheme]
@@ -56,7 +60,7 @@ def create_socket_params(url):
 
 def create_socket(url):
     socket_params = create_socket_params(url)
-    s = socket.socket(socket_params.params[0])
+    s = socket.socket(*socket_params.params[0])
     s.connect(socket_params.address)
-    return socket_params.parts,
+    return socket_params.parts, s
 # end if
