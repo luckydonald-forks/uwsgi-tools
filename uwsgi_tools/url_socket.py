@@ -1,9 +1,9 @@
 import socket
 import sys
 if sys.version_info[0] == 3:
-    from urllib.parse import urlsplit, ParseResult
+    from urllib.parse import urlsplit, SplitResult
 else:  # py 2
-    from urlparse import urlsplit
+    from urlparse import urlsplit, SplitResult
 # end if
 
 NETWORK_SOCKET_TYPES_BY_SCHEME = {
@@ -40,7 +40,11 @@ def create_socket_params(url):
         socket_type = FILE_SOCKET_TYPES_BY_SCHEME[parts.scheme]
         remove_len = len(parts.scheme+"://")
         connect = url[remove_len:]
-        parts = ParseResult(scheme=parts.scheme, netloc='', path=connect, params='', query='', fragment='')
+        if sys.version_info[0] == 3:
+            parts = SplitResult(scheme=parts.scheme, netloc='', path=connect, query='', fragment='')
+        else:
+            parts = SplitResult(scheme=parts.scheme, netloc='', path=connect, params='', query='', fragment='')
+        # end if
         return SocketInfos(parts, [(socket.AF_UNIX, socket_type)], connect)
     elif parts.scheme in NETWORK_SOCKET_TYPES_BY_SCHEME:
         socket_type = NETWORK_SOCKET_TYPES_BY_SCHEME[parts.scheme]

@@ -14,24 +14,23 @@ def ask_uwsgi(s, var, body=''):
     return b''.join(response).decode('utf8')
 
 
-def curl(uwsgi_addr, method='GET', url=None):
-    parts, s = create_socket(uwsgi_addr)
-    parts2 = urlsplit(url)
-    # end if
-    uri = parts2.path + "?" + parts2.query + "#" + parts2.fragment
+def curl(uwsgi_addr, method='GET', url=None, body=None):
+    parts_uwsgi, s = create_socket(uwsgi_addr)
+    parts_url = urlsplit(url)
+    host = parts_url.hostname or '127.0.0.1'
+    uri = parts_url.path + "?" + parts_url.query + "#" + parts_url.fragment
     var = {
         'SERVER_PROTOCOL': 'HTTP/1.1',
         'REQUEST_METHOD': method,
-        'PATH_INFO': parts2.path,
+        'PATH_INFO': parts_url.path,
         'REQUEST_URI': uri,
-        'QUERY_STRING': parts2.query,
-        'SERVER_NAME': parts2.host or '127.0.0.1',
-        'HTTP_HOST': parts2.host,
+        'QUERY_STRING': parts_url.query,
+        'SERVER_NAME':  host,
+        'HTTP_HOST': host,
     }
-    result = ask_uwsgi(s, var)
+    result = ask_uwsgi(s, var, body)
     s.close()
     return result
-
 
 
 def cli(*args):
