@@ -1,9 +1,10 @@
 import socket
 from .utils import pack_uwsgi_vars
-from .url_socket import create_socket, urlsplit
+from .url_socket import create_socket, urlsplit, parse_http_response
 
 
 def ask_uwsgi(s, var, body=''):
+    body = '' if body is None else body
     s.send(pack_uwsgi_vars(var) + body.encode('utf8'))
     response = []
     while 1:
@@ -49,9 +50,12 @@ def cli(*args):
                         help='Request URI optionally containing hostname')
 
     args = parser.parse_args(args or sys.argv[1:])
-    print(curl(args.uwsgi_addr[0], args.method, args.url))
+    result = curl(args.uwsgi_addr[0], args.method, args.url)
+    response = parse_http_response(result)
+    print(result)
+    return 200 <= response.status_code <= 299
 
 
 if __name__ == '__main__':
     import sys
-    cli(*sys.argv[1:])
+    exit(cli(*sys.argv[1:]))

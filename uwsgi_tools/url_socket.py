@@ -2,8 +2,14 @@ import socket
 import sys
 if sys.version_info[0] == 3:
     from urllib.parse import urlsplit, SplitResult
+    from io import BytesIO as FakeIO
+    from http.client import HTTPResponse
+    to_binary = lambda x: bytes(x, 'utf-8')
 else:  # py 2
     from urlparse import urlsplit, SplitResult
+    from StringIO import StringIO as FakeIO
+    from httplib import HTTPResponse
+    to_binary = lambda x: x
 # end if
 
 NETWORK_SOCKET_TYPES_BY_SCHEME = {
@@ -11,11 +17,12 @@ NETWORK_SOCKET_TYPES_BY_SCHEME = {
     'udp': socket.SOCK_DGRAM,
 }
 FILE_SOCKET_TYPES_BY_SCHEME = {
-    'unix':     socket.SOCK_STREAM,
-    'unix+tcp': socket.SOCK_STREAM,
-    'tcp+unix': socket.SOCK_STREAM,
-    'unix+udp': socket.SOCK_DGRAM,
-    'udp+unix': socket.SOCK_DGRAM,
+    '':         socket.SOCK_STREAM,  # unix, tcp
+    'unix':     socket.SOCK_STREAM,  # unix, tcp
+    'unix+tcp': socket.SOCK_STREAM,  # unix, tcp
+    'tcp+unix': socket.SOCK_STREAM,  # unix, tcp
+    'unix+udp': socket.SOCK_DGRAM,   # unix, udp
+    'udp+unix': socket.SOCK_DGRAM,   # unix, udp
 }
 
 
@@ -68,3 +75,23 @@ def create_socket(url):
     s.connect(socket_params.address)
     return socket_params.parts, s
 # end if
+
+
+class FakeSocket():
+    """https://stackoverflow.com/a/24729316/3423324"""
+    def __init__(self, response_str):
+        self._file = FakeIO(to_binary(response_str))
+    # end def
+
+    def makefile(self, *args, **kwargs):
+        return self._file
+    # end def
+# end class
+
+
+def parse_http_response(http_string):
+    """https://stackoverflow.com/a/24729316/3423324"""
+    source = FakeSocket(http_string)
+    response = HTTPResponse(source)
+    response.begin()
+    return response
