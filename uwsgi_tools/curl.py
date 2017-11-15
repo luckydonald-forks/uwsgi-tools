@@ -49,7 +49,7 @@ def cli(*args):
     parser.add_argument('url', nargs='?', default='/',
                         help='Request URI optionally containing hostname')
 
-    parser.add_argument('-t', '--timeout', nargs=1, default=0,
+    parser.add_argument('-t', '--timeout', nargs=1, default=0, type=float,
                         help='Socket timeout')
 
     parser.parse_args(['unix:///sockets/bots/hey_admin.sock', 'GET', '/404'])
