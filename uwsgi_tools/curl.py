@@ -50,12 +50,20 @@ def cli(*args):
                         help='Request URI optionally containing hostname')
 
     args = parser.parse_args(args or sys.argv[1:])
-    result = curl(args.uwsgi_addr[0], args.method, args.url)
-    response = parse_http_response(result)
-    print(result)
-    return 200 <= response.status <= 299
+    http, success = run(args.uwsgi_addr[0], args.method, args.url)
+    print(http)
+    return 0 if success else 4
+# end def
 
+
+def run(uwsgi_addr, method='GET', url=None, body=None):
+    result = curl(uwsgi_addr, method, url, body)
+    response = parse_http_response(result)
+    success = 200 <= response.status <= 299
+    return result, success
+# end def
 
 if __name__ == '__main__':
     import sys
-    exit(0 if cli(*sys.argv[1:]) else 4)
+    res = cli(*sys.argv[1:])
+    sys.exit(0 if res else 4)
