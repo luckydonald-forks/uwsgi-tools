@@ -55,7 +55,7 @@ def cli(*args):
     args = parser.parse_args(args or sys.argv[1:])
     http, success = run(args.uwsgi_addr[0], args.method, args.url, timeout=args.timeout)
     print(http)
-    return 0 if success else 4
+    return 0 if success else 1
 # end def
 
 
