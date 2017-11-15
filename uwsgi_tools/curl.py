@@ -15,8 +15,8 @@ def ask_uwsgi(s, var, body=''):
     return b''.join(response).decode('utf8')
 
 
-def curl(uwsgi_addr, method='GET', url=None, body=None):
-    parts_uwsgi, s = create_socket(uwsgi_addr)
+def curl(uwsgi_addr, method='GET', url=None, body=None, timeout=0):
+    parts_uwsgi, s = create_socket(uwsgi_addr, timeout=timeout)
     parts_url = urlsplit(url)
     host = parts_url.hostname or '127.0.0.1'
     uri = parts_url.path + "?" + parts_url.query + "#" + parts_url.fragment
@@ -49,15 +49,19 @@ def cli(*args):
     parser.add_argument('url', nargs='?', default='/',
                         help='Request URI optionally containing hostname')
 
+    parser.add_argument('-t', '--timeout', nargs=1, default=0,
+                        help='Socket timeout')
+
+    parser.parse_args(['unix:///sockets/bots/hey_admin.sock', 'GET', '/404'])
     args = parser.parse_args(args or sys.argv[1:])
-    http, success = run(args.uwsgi_addr[0], args.method, args.url)
+    http, success = run(args.uwsgi_addr[0], args.method, args.url, timeout=args.timeout)
     print(http)
     return 0 if success else 4
 # end def
 
 
-def run(uwsgi_addr, method='GET', url=None, body=None):
-    result = curl(uwsgi_addr, method, url, body)
+def run(uwsgi_addr, method='GET', url=None, body=None, timeout=0):
+    result = curl(uwsgi_addr, method, url, body, timeout)
     response = parse_http_response(result)
     success = 200 <= response.status <= 299
     return result, success
@@ -66,4 +70,4 @@ def run(uwsgi_addr, method='GET', url=None, body=None):
 if __name__ == '__main__':
     import sys
     res = cli(*sys.argv[1:])
-    sys.exit(0 if res else 4)
+    sys.exit(cli)

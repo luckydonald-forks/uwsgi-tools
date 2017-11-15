@@ -69,9 +69,10 @@ def create_socket_params(url):
 # end def
 
 
-def create_socket(url):
+def create_socket(url, timeout=0):
     socket_params = create_socket_params(url)
     s = socket.socket(*socket_params.params[0])
+    s.settimeout(timeout)
     s.connect(socket_params.address)
     return socket_params.parts, s
 # end if
