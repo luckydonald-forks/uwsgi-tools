@@ -29,7 +29,7 @@ def curl(uwsgi_addr, method='GET', url=None, body=None, timeout=0, headers=()):
         'REQUEST_URI': uri,
         'QUERY_STRING': parts_url.query,
         'SERVER_NAME':  host,
-        'SERVER_PORT': parts_url.port,
+        'SERVER_PORT': parts_url.port or '',
         'HTTP_HOST': host,
     }
     # add the headers
