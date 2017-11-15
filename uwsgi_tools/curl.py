@@ -52,7 +52,6 @@ def cli(*args):
     parser.add_argument('-t', '--timeout', nargs=1, default=0, type=float,
                         help='Socket timeout')
 
-    parser.parse_args(['unix:///sockets/bots/hey_admin.sock', 'GET', '/404'])
     args = parser.parse_args(args or sys.argv[1:])
     http, success = run(args.uwsgi_addr[0], args.method, args.url, timeout=args.timeout)
     print(http)
