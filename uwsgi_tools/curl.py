@@ -53,9 +53,9 @@ def cli(*args):
     result = curl(args.uwsgi_addr[0], args.method, args.url)
     response = parse_http_response(result)
     print(result)
-    return 200 <= response.status_code <= 299
+    return 200 <= response.status <= 299
 
 
 if __name__ == '__main__':
     import sys
-    exit(cli(*sys.argv[1:]))
+    exit(0 if cli(*sys.argv[1:]) else 4)
