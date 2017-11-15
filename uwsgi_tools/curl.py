@@ -71,7 +71,7 @@ def cli(*args):
                              'This option can be used multiple times to add/replace/remove multiple headers.')
 
     args = parser.parse_args(args or sys.argv[1:])
-    http, success = run(args.uwsgi_addr[0], args.method, args.url, timeout=args.timeout, header=args.headers)
+    http, success = run(args.uwsgi_addr[0], args.method, args.url, timeout=args.timeout, headers=args.headers)
     print(http)
     return 0 if success else 1
 # end def
